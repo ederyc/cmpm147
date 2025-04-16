@@ -34,44 +34,136 @@ function resizeScreen() {
   // redrawCanvas(); // Redraw everything based on new size
 }
 
-// setup() function is called once when the program starts
+/* exported setup, draw */
+let seed = 0;
+const skyColors = ["#3dfc7d", "#6efcb7", "#81ffbf"];
+const mountainColor = "#1a1a1a";
+const waterColor = "#09373d";
+const starColor = "#ffffff";
+
+let stars = [];
+
 function setup() {
-  // place our canvas, making it fit our container
-  canvasContainer = $("#canvas-container");
-  let canvas = createCanvas(canvasContainer.width(), canvasContainer.height());
-  canvas.parent("canvas-container");
-  // resize canvas is the page is resized
-
-  // create an instance of the class
-  myInstance = new MyClass("VALUE1", "VALUE2");
-
-  $(window).resize(function() {
-    resizeScreen();
+  let canvas = createCanvas(800, 400);
+  canvas.parent('canvas-container');
+  // Link the existing HTML button to reimagine functionality
+  const reimagineBtn = document.getElementById("reimagine");
+  reimagineBtn.addEventListener("click", () => {
+    seed++;
+    randomSeed(seed);
+    noiseSeed(seed);
+    createStaticBackground();
   });
-  resizeScreen();
+
+  // create static background
+  createStaticBackground();
+
+  // create stars with random positions and slight motion
+  for (let i = 0; i < 100; i++) {
+    stars.push({
+      x: random(width),
+      y: random(height / 2),
+      speed: random(0.1, 0.5),
+      size: random(1, 2)
+    });
+  }
 }
 
-// draw() function is called repeatedly, it's the main animation loop
 function draw() {
-  background(220);    
-  // call a method on the instance
-  myInstance.myMethod();
+  image(bg, 0, 0); // draw pre-rendered background
 
-  // Set up rotation for the rectangle
-  push(); // Save the current drawing context
-  translate(centerHorz, centerVert); // Move the origin to the rectangle's center
-  rotate(frameCount / 100.0); // Rotate by frameCount to animate the rotation
-  fill(234, 31, 81);
-  noStroke();
-  rect(-125, -125, 250, 250); // Draw the rectangle centered on the new origin
-  pop(); // Restore the original drawing context
-
-  // The text is not affected by the translate and rotate
-  fill(255);
-  textStyle(BOLD);
-  textSize(140);
-  text("p5*", centerHorz - 105, centerVert + 40);
+  drawMovingStars();
+  drawMovingWater();
 }
+
+let bg;
+
+function createStaticBackground() {
+  // create a pre-rendered background to avoid redrawing mountains and aurora every frame
+  bg = createGraphics(width, height);
+  bg.background("#162840");
+  drawAurora(bg);
+  drawMountains(bg);
+}
+
+
+
+
+function drawAurora(pg) {
+  pg.noStroke();
+  for (let i = 0; i < 30; i++) {
+    pg.fill(color(random(skyColors) + "10")); // translucent
+    pg.beginShape();
+    for (let x = 0; x <= width; x += 20) {
+      const y = noise(x * 0.01, i * 0.1 + seed) * height / 2;
+      pg.vertex(x, y);
+    }
+    pg.vertex(width, 0);
+    pg.vertex(0, 0);
+    pg.endShape(CLOSE);
+  }
+}
+
+function drawMountains(pg) {
+  pg.fill(mountainColor);
+  pg.beginShape();
+  pg.vertex(0, height / 2);
+  for (let x = 0; x <= width; x += 20) {
+    const y = height / 2 - noise(x * 0.01 + seed) * 200;
+    pg.vertex(x, y);
+  }
+  pg.vertex(width, height / 2);
+  pg.vertex(width, height);
+  pg.vertex(0, height);
+  pg.endShape(CLOSE);
+}
+
+function drawMovingWater() {
+  noStroke();
+
+  const waveCount = 8;
+
+  for (let i = 0; i < waveCount; i++) {
+    let waveOffset = i * 15; // vertical spacing between waves
+    let waveSpeed = frameCount * 0.01 + i * 0.5;
+    let waveHeight = 8 + i * 1.5;
+
+    // color fade from aurora green to black
+    let topColor = color("#1e4a3f");
+    let bottomColor = color("#000000");
+    let waveColor = lerpColor(topColor, bottomColor, i / (waveCount - 1));
+    fill(waveColor);
+
+    beginShape();
+    vertex(0, height); // bottom left
+    for (let x = 0; x <= width; x += 10) {
+      let y = height / 2 + waveOffset + waveHeight * sin(x * 0.015 + waveSpeed);
+      vertex(x, y);
+    }
+    vertex(width, height); // bottom right
+    endShape(CLOSE);
+  }
+}
+
+
+
+
+
+
+function drawMovingStars() {
+  noStroke();
+  fill(starColor);
+  for (let s of stars) {
+    ellipse(s.x, s.y, s.size);
+    s.x += s.speed;
+    if (s.x > width) {
+      s.x = 0;
+      s.y = random(height / 2);
+    }
+  }
+}
+
+
 
 // mousePressed() function is called once after every time a mouse button is pressed
 function mousePressed() {
