@@ -1,79 +1,122 @@
-// sketch.js - purpose and description here
-// Author: Your Name
-// Date:
+/* exported generateGrid, drawGrid */
+/* global placeTile, tileConfig */
 
-// Here is how you might set up an OOP p5.js project
-// Note that p5.js looks for a file called sketch.js
+function generateGrid(numCols, numRows) {
+  let grid = [];
 
-// Constants - User-servicable parts
-// In a longer project I like to put these in a separate file
-const VALUE1 = 1;
-const VALUE2 = 2;
-
-// Globals
-let myInstance;
-let canvasContainer;
-var centerHorz, centerVert;
-
-class MyClass {
-    constructor(param1, param2) {
-        this.property1 = param1;
-        this.property2 = param2;
+  if (tileConfig.floorBaseTj === 14) {
+    // Dungeon mode: fill with walls
+    for (let i = 0; i < numRows; i++) {
+      let row = [];
+      for (let j = 0; j < numCols; j++) {
+        row.push("_");
+      }
+      grid.push(row);
     }
 
-    myMethod() {
-        // code to run when method is called
+    // Carve rooms
+    for (let n = 0; n < 3; n++) {
+      let x1 = floor(random(1, numCols - 2));
+      let x2 = floor(random(1, numCols - 2));
+      let y1 = floor(random(1, numRows - 2));
+      let y2 = floor(random(1, numRows - 2));
+
+      for (let i = min(y1, y2); i <= max(y1, y2); i++) {
+        for (let j = min(x1, x2); j <= max(x1, x2); j++) {
+          grid[i][j] = ".";
+        }
+      }
     }
+  } else {
+    // Overworld mode
+    for (let i = 0; i < numRows; i++) {
+      let row = [];
+      for (let j = 0; j < numCols; j++) {
+        let n = noise(i / 10, j / 10);
+        if (n > 0.6) {
+          row.push("~");
+        } else {
+          row.push("_");
+        }
+      }
+      grid.push(row);
+    }
+
+    for (let n = 0; n < 3; n++) {
+      let x1 = floor(random(1, numCols - 2));
+      let x2 = floor(random(1, numCols - 2));
+      let y1 = floor(random(1, numRows - 2));
+      let y2 = floor(random(1, numRows - 2));
+
+      for (let i = min(y1, y2); i <= max(y1, y2); i++) {
+        for (let j = min(x1, x2); j <= max(x1, x2); j++) {
+          grid[i][j] = ".";
+        }
+      }
+    }
+  }
+
+  return grid;
 }
 
-function resizeScreen() {
-  centerHorz = canvasContainer.width() / 2; // Adjusted for drawing logic
-  centerVert = canvasContainer.height() / 2; // Adjusted for drawing logic
-  console.log("Resizing...");
-  resizeCanvas(canvasContainer.width(), canvasContainer.height());
-  // redrawCanvas(); // Redraw everything based on new size
+function drawGrid(grid) {
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[i].length; j++) {
+      let x = j * 16;
+      let y = i * 16;
+      let code = grid[i][j];
+
+      if (code === ".") {
+        drawContext(grid, i, j, ".", tileConfig.floorBaseTi, tileConfig.floorBaseTj);
+      } else if (code === "~") {
+        placeTile(i, j, tileConfig.waterTi, tileConfig.waterTj);
+      } else if (code === "_") {
+        placeTile(i, j, floor(random(4)), tileConfig.groundTileRow);
+
+        if (tileConfig.floorBaseTj !== 14 && random() < 0.01) {
+          let pulse = sin(millis() * 0.1 + i * j) * 50 + 180;
+          noStroke();
+          fill(255, 255, 160, pulse / 2);
+          ellipse(j * 16 + 8, i * 16 + 8, 16, 16);
+          fill(255, 255, 200, pulse);
+          ellipse(j * 16 + 8, i * 16 + 8, 10, 10);
+        }
+      } else {
+        placeTile(i, j, 0, 0);
+      }
+
+      let brightness = map(noise(i * 0.1, j * 0.1, millis() * 0.0001), 0, 1, 0, 150);
+      noStroke();
+      fill(0, 0, 0, brightness);
+      rect(x, y, 16, 16);
+    }
+  }
 }
 
-// setup() function is called once when the program starts
-function setup() {
-  // place our canvas, making it fit our container
-  canvasContainer = $("#canvas-container");
-  let canvas = createCanvas(canvasContainer.width(), canvasContainer.height());
-  canvas.parent("canvas-container");
-  // resize canvas is the page is resized
-
-  // create an instance of the class
-  myInstance = new MyClass("VALUE1", "VALUE2");
-
-  $(window).resize(function() {
-    resizeScreen();
-  });
-  resizeScreen();
+function gridCheck(grid, i, j, target) {
+  return i >= 0 && i < grid.length &&
+         j >= 0 && j < grid[i].length &&
+         grid[i][j] === target;
 }
 
-// draw() function is called repeatedly, it's the main animation loop
-function draw() {
-  background(220);    
-  // call a method on the instance
-  myInstance.myMethod();
+function gridCode(grid, i, j, target) {
+  let north = gridCheck(grid, i - 1, j, target) ? 1 : 0;
+  let south = gridCheck(grid, i + 1, j, target) ? 1 : 0;
+  let east  = gridCheck(grid, i, j + 1, target) ? 1 : 0;
+  let west  = gridCheck(grid, i, j - 1, target) ? 1 : 0;
 
-  // Set up rotation for the rectangle
-  push(); // Save the current drawing context
-  translate(centerHorz, centerVert); // Move the origin to the rectangle's center
-  rotate(frameCount / 100.0); // Rotate by frameCount to animate the rotation
-  fill(234, 31, 81);
-  noStroke();
-  rect(-125, -125, 250, 250); // Draw the rectangle centered on the new origin
-  pop(); // Restore the original drawing context
-
-  // The text is not affected by the translate and rotate
-  fill(255);
-  textStyle(BOLD);
-  textSize(140);
-  text("p5*", centerHorz - 105, centerVert + 40);
+  return (north << 0) + (south << 1) + (east << 2) + (west << 3);
 }
 
-// mousePressed() function is called once after every time a mouse button is pressed
-function mousePressed() {
-    // code to run when mouse is pressed
+function drawContext(grid, i, j, target, baseTi, baseTj) {
+  const code = gridCode(grid, i, j, target);
+  const [tiOffset, tjOffset] = lookup[code];
+  placeTile(i, j, baseTi + tiOffset, baseTj + tjOffset);
 }
+
+const lookup = [
+  [4, 0], [5, 0], [6, 0], [7, 0],
+  [8, 0], [9, 0], [10, 0], [11, 0],
+  [12, 0], [13, 0], [14, 0], [15, 0],
+  [0, 1], [1, 1], [2, 1], [3, 1]
+];
