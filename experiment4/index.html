@@ -1,44 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Experiment 4 - Procedural Generators</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="../css/site.css" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <title>All Generators</title>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+  <script src="my_world.js" defer></script>
+  <script src="engine.js"></script>
+  <style>
+    body { margin: 0; padding: 20px; font-family: sans-serif; }
+    .canvas-wrapper { margin-bottom: 40px; }
+  </style>
 </head>
-
 <body>
-  <main id="content">
-    <section>
-      <h1>Experiment 4 - Procedural Tile Generators</h1>
+  <main>
+    <h1>All Generators on One Page</h1>
 
-      <div class="minor-section">
-        <h2>1. Infinite Running Track</h2>
-        <li><a href="./track/index.html">Experiment 4</a></li>
-      </div>
+    <div class="canvas-wrapper">
+      <div id="track-container"></div>
+    </div>
 
-      <div class="minor-section">
-        <h2>2. Infinite Soccer Field</h2>
-        <p><a href="./soccer/index.html" target="_blank">Open Soccer Field Generator</a></p>
-      </div>
+    <div class="canvas-wrapper">
+      <div id="soccer-container"></div>
+    </div>
 
-      <div class="minor-section">
-        <h2>3. Infinite Racecar Track</h2>
-        <p><a href="./racecar/index.html" target="_blank">Open Racecar Generator</a></p>
-      </div>
-
-      <div class="minor-section">
-        <h2>Description</h2>
-        <p>This page contains links to three different procedurally generated infinite worlds created using p5.js. Each generator showcases seeded randomness and interaction.</p>
-      </div>
-
-      <nav id="links" class="minor-section">
-        <ul>
-          <li><a href="../index.html">Home</a></li>
-        </ul>
-      </nav>
-    </section>
+    <div class="canvas-wrapper">
+      <div id="racecar-container"></div>
+    </div>
   </main>
 </body>
 </html>
